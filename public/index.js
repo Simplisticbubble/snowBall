@@ -13,6 +13,7 @@ console.log(canvasEl)
 const socket = io('ws://localhost:5000');
 let map = [[]];
 let players = [];
+let snowballs = [];
 const TILE_SIZE = 64;
 
 
@@ -27,6 +28,10 @@ socket.on('map', (loadedMap)=>{
 
 socket.on('players', (serverPlayers) => {
     players = serverPlayers;
+
+})
+socket.on('snowballs', (serverSnowballs) => {
+    snowballs = serverSnowballs;
 
 })
 
@@ -62,6 +67,10 @@ window.addEventListener('keyup', (e) =>{
     }
     socket.emit("inputs", inputs);
 });
+window.addEventListener('click', (e) =>{
+    const angle = Math.atan2(e.clientY - canvasEl.height/2, e.clientX - canvasEl.width/2);
+    socket.emit('snowball', angle)
+})
 function loop(){
     
     canvas.clearRect(0,0,canvasEl.width, canvasEl.height);
@@ -71,8 +80,8 @@ function loop(){
     let cameraX = 0;
     let cameraY = 0;
     if(myPlayer){
-        cameraX = myPlayer.x - canvasEl.width / 2;
-        cameraY = myPlayer.y - canvasEl.height /2;
+        cameraX = parseInt(myPlayer.x - canvasEl.width / 2);
+        cameraY = parseInt(myPlayer.y - canvasEl.height /2);
     }else{
         console.log('none');
     }
@@ -90,7 +99,20 @@ function loop(){
     for(const player of players){
         canvas.drawImage(santaImage, player.x - cameraX, player.y - cameraY);
     }
-    
+
+
+    for(const snowball of snowballs){
+        canvas.fillStyle = "#FFFFFF";
+        canvas.beginPath();
+        canvas.arc(
+        snowball.x - cameraX,
+        snowball.y - cameraY,
+        3,
+        0,
+        2 * Math.PI
+        );
+        canvas.fill();
+    }
 
     window.requestAnimationFrame(loop);
 }
