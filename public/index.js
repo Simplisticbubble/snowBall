@@ -15,8 +15,10 @@ let map = [[]];
 let players = [];
 const TILE_SIZE = 64;
 
+
 socket.on("connect", () => {
     console.log("connected");
+    console.log(socket.id);
 });
 
 socket.on('map', (loadedMap)=>{
@@ -25,6 +27,7 @@ socket.on('map', (loadedMap)=>{
 
 socket.on('players', (serverPlayers) => {
     players = serverPlayers;
+
 })
 
 const inputs = {
@@ -60,8 +63,20 @@ window.addEventListener('keyup', (e) =>{
     socket.emit("inputs", inputs);
 });
 function loop(){
+    
+    canvas.clearRect(0,0,canvasEl.width, canvasEl.height);
 
-    canvas.clearRect(0,0,canvas.width, canvas.height);
+    const myPlayer = players.find((player) => player.id === socket.id);
+    console.log(myPlayer);
+    let cameraX = 0;
+    let cameraY = 0;
+    if(myPlayer){
+        cameraX = myPlayer.x - canvasEl.width / 2;
+        cameraY = myPlayer.y - canvasEl.height /2;
+    }else{
+        console.log('none');
+    }
+    
 
     const TILES_IN_ROW = 9;
     for(let row = 0; row < map.length; row++){
@@ -69,11 +84,11 @@ function loop(){
             const {id} = map[row][col];
             const imageRow = parseInt(id/TILES_IN_ROW);
             const imageCol = id % TILES_IN_ROW;
-            canvas.drawImage(mapImage,imageCol * TILE_SIZE, imageRow * TILE_SIZE, TILE_SIZE, TILE_SIZE,col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE )
+            canvas.drawImage(mapImage,imageCol * TILE_SIZE, imageRow * TILE_SIZE, TILE_SIZE, TILE_SIZE,col * TILE_SIZE - cameraX, row * TILE_SIZE - cameraY, TILE_SIZE, TILE_SIZE )
         }
     }
     for(const player of players){
-        canvas.drawImage(santaImage, player.x, player.y);
+        canvas.drawImage(santaImage, player.x - cameraX, player.y - cameraY);
     }
     
 
